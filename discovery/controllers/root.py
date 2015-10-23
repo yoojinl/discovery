@@ -1,8 +1,30 @@
-from pecan import abort, expose
+# -*- coding: utf-8 -*-
+
+#    Copyright 2015 Mirantis, Inc.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import pecan
+from pecan import rest
+
 from oslo_config import cfg
+
+from discovery.controllers import disks
+from discovery import models
 
 
 CONF = cfg.CONF
+
 
 def parse_dnsmasq_leases(conf_path):
     try:
@@ -29,8 +51,36 @@ def parse_dnsmasq_leases(conf_path):
     return result_leases
 
 
+class NodeController(rest.RestController):
+
+    disks = disks.DiskController()
+
+    @pecan.expose(template='json')
+    def get_one(self, node_mac):
+        node_mac = node_mac.lower()
+        try:
+            return models.NODES[node_mac]
+        except KeyError:
+            pecan.abort(404, 'Node {0} do not exists'.format(node_mac))
+
+    @pecan.expose(template='json')
+    def put(self, node_mac):
+        node_mac = node_mac.lower()
+        if node_mac not in models.NODES:
+            pecan.abort(404, 'Node {0} do not exists'.format(node_mac))
+        models.NODES[node_mac]['discovery'] = pecan.request.json
+        return models.NODES[node_mac]
+
+
 class RootController(object):
 
-    @expose(generic=True, template='json')
+    nodes = NodeController()
+
+    @pecan.expose(generic=True, template='json')
     def index(self):
-        return parse_dnsmasq_leases(CONF.dnsmasq_leases)
+
+        for node in parse_dnsmasq_leases(CONF.dnsmasq_leases):
+            models.NODES.setdefault(node['mac'], models.EMPTY_NODE)
+            models.NODES[node['mac']].update(node)
+
+        return models.NODES.values()

@@ -16,6 +16,7 @@
 
 import pecan
 from pecan import rest
+from copy import deepcopy
 
 from oslo_config import cfg
 
@@ -78,9 +79,8 @@ class RootController(object):
 
     @pecan.expose(generic=True, template='json')
     def index(self):
-
         for node in parse_dnsmasq_leases(CONF.dnsmasq_leases):
-            models.NODES.setdefault(node['mac'], models.EMPTY_NODE)
+            models.NODES.setdefault(node['mac'], deepcopy(models.EMPTY_NODE))
             models.NODES[node['mac']].update(node)
 
         return models.NODES.values()

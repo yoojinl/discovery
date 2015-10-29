@@ -77,8 +77,15 @@ class NodeDiscoveryService(periodic_task.PeriodicTasks):
         LOG.debug('Result of the scan: %s', nodes)
 
         for node in nodes:
-            ohai_data = self._scan_node(node)
-            self._feed_discovery(node, ohai_data)
+            node_id = node['mac']
+            LOG.debug('Scanning node %s', node_id)
+            try:
+                ohai_data = self._scan_node(node)
+                self._feed_discovery(node, ohai_data)
+            except Exception as exc:
+                LOG.exception(exc)
+                LOG.error(
+                    'Failed to get information from the node %s', node_id)
 
     def _get_current_nodes(self):
         return self._api_request('GET', '/').json()
@@ -108,7 +115,6 @@ class NodeDiscoveryService(periodic_task.PeriodicTasks):
         )
 
     def _scan_node(self, node):
-        LOG.debug('Scanning node %s', node['mac'])
         with fabric_api.settings(
             host_string=node['ip'],
             user=self.conf.ssh_user,

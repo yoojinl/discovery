@@ -77,11 +77,11 @@ class NodeDiscoveryService(periodic_task.PeriodicTasks):
         LOG.debug('Result of the scan: %s', nodes)
 
         for node in nodes:
-            node_id = node['mac']
+            node_id = node['uuid']
             LOG.debug('Scanning node %s', node_id)
             try:
                 ohai_data = self._scan_node(node)
-                self._feed_discovery(node, ohai_data)
+                self._feed_discovery(node_id, ohai_data)
             except Exception as exc:
                 LOG.exception(exc)
                 LOG.error(
@@ -90,12 +90,11 @@ class NodeDiscoveryService(periodic_task.PeriodicTasks):
     def _get_current_nodes(self):
         return self._api_request('GET', '/').json()
 
-    def _feed_discovery(self, node, ohai_data):
-        mac = node['mac']
-        LOG.debug('Sending info for node %s', mac)
+    def _feed_discovery(self, node_id, ohai_data):
+        LOG.debug('Sending info for node %s', node_id)
         return self._api_request(
             'PUT',
-            '/nodes/{mac}/'.format(mac=mac),
+            '/nodes/{node_id}/'.format(node_id=node_id),
             data=json.dumps(ohai_data),
         )
 

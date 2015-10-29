@@ -13,10 +13,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from copy import deepcopy
 
 import pecan
 from pecan import rest
-from copy import deepcopy
 
 from oslo_config import cfg
 
@@ -57,20 +57,20 @@ class NodeController(rest.RestController):
     disks = disks.DiskController()
 
     @pecan.expose(template='json')
-    def get_one(self, node_mac):
-        node_mac = node_mac.lower()
+    def get_one(self, node_id):
+        node_id = node_id.lower()
         try:
-            return models.NODES[node_mac]
+            return models.NODES[node_id]
         except KeyError:
-            pecan.abort(404, 'Node {0} do not exists'.format(node_mac))
+            pecan.abort(404, 'Node {0} do not exists'.format(node_id))
 
     @pecan.expose(template='json')
-    def put(self, node_mac):
-        node_mac = node_mac.lower()
-        if node_mac not in models.NODES:
-            pecan.abort(404, 'Node {0} do not exists'.format(node_mac))
-        models.NODES[node_mac]['discovery'] = pecan.request.json
-        return models.NODES[node_mac]
+    def put(self, node_id):
+        node_id = node_id.lower()
+        if node_id not in models.NODES:
+            pecan.abort(404, 'Node {0} do not exists'.format(node_id))
+        models.NODES[node_id]['discovery'] = pecan.request.json
+        return models.NODES[node_id]
 
 
 class RootController(object):
@@ -79,8 +79,18 @@ class RootController(object):
 
     @pecan.expose(generic=True, template='json')
     def index(self):
-        for node in parse_dnsmasq_leases(CONF.dnsmasq_leases):
-            models.NODES.setdefault(node['mac'], deepcopy(models.EMPTY_NODE))
-            models.NODES[node['mac']].update(node)
+        dnsmasq_nodes = parse_dnsmasq_leases(CONF.dnsmasq_leases)
+
+        for node_data in dnsmasq_nodes:
+            node_uuid = models.NODES_MAC_UUID_MAPPING.get(
+                node_data['mac']) or models.get_uuid()
+
+            if node_uuid not in models.NODES:
+                models.NODES_MAC_UUID_MAPPING[node_data['mac']] = node_uuid
+
+                new_node = deepcopy(models.EMPTY_NODE)
+                new_node['uuid'] = node_uuid
+                new_node.update(node_data)
+                models.NODES[node_uuid] = new_node
 
         return models.NODES.values()

@@ -18,9 +18,10 @@ DISCOVERY_SERVICE_OPTS = [
     cfg.IPOpt('discovery_host_ip',
               default='0.0.0.0',
               help='The IP address on which discovery-api listens.'),
-    cfg.PortOpt('discovery_port',
-                default=8881,
-                help='The TCP port on which discovry-api listens.'),
+    cfg.IntOpt('discovery_port',
+               default=8881,
+               min=1, max=65535,
+               help='The TCP port on which discovry-api listens.'),
 ]
 
 SCAN_OPTS = [

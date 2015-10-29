@@ -31,11 +31,10 @@ SCAN_OPTS = [
                     'seconds.'),
     cfg.StrOpt('ssh_key',
                help='Path to SSH identity key file used to scan nodes',
-               ),
+               required=True),
     cfg.StrOpt('ssh_user',
                default='root',
-               help='SSH user used to scan nodes',
-               ),
+               help='SSH user used to scan nodes'),
 ]
 
 

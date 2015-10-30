@@ -21,7 +21,7 @@ EMPTY_NODE = {
     'ip': None,
     'mac': None,
     'discovery': {},
-    'uuid': None,
+    'id': None,
 }
 
 

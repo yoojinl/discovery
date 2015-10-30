@@ -77,7 +77,7 @@ class NodeDiscoveryService(periodic_task.PeriodicTasks):
         LOG.debug('Result of the scan: %s', nodes)
 
         for node in nodes:
-            node_id = node['uuid']
+            node_id = node['id']
             LOG.debug('Scanning node %s', node_id)
             try:
                 ohai_data = self._scan_node(node)

@@ -89,7 +89,7 @@ class RootController(object):
                 models.NODES_MAC_UUID_MAPPING[node_data['mac']] = node_uuid
 
                 new_node = deepcopy(models.EMPTY_NODE)
-                new_node['uuid'] = node_uuid
+                new_node['id'] = node_uuid
                 new_node.update(node_data)
                 models.NODES[node_uuid] = new_node
 

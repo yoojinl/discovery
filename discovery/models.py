@@ -14,14 +14,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
+
 EMPTY_NODE = {
     'ip': None,
     'mac': None,
     'discovery': {},
+    'id': None,
 }
 
-# "mac_addr" => { "ip" => 0.0.0.0 }
+
+NODES_MAC_UUID_MAPPING = {}
+
+
 NODES = {}
 
-# "mac_addr" => [disk1, disk2]
-DISKS = {}
+
+def get_uuid():
+    return str(uuid.uuid4())

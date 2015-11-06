@@ -31,7 +31,7 @@ class FileScanner(BaseScanner):
 
     name = 'file_scanner'
     version = '1.0.0.dev'
-    cli_opts = [cfg.StrOpt('watch_file', help='File to be parsed', required=True)]
+    cli_opts = [cfg.StrOpt('watch_file', help='File to be parsed')]
 
     watch_manager = pyinotify.WatchManager()
     mask = pyinotify.IN_MODIFY | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE
@@ -84,59 +84,5 @@ class FileScanner(BaseScanner):
         """
         return jsonutils.load(file_name)
 
-    def _match_node(self, node):
-        LOG.info('Start matching the node: %s', node)
-        ids = self._discovery_request(
-            'POST',
-            '/nodes/actions/match',
-            data=self._serialize_as_list_for_discovery(node))
-
-        LOG.info('Response from the server:')
-        LOG.info(ids.text)
-        parsed_ids = ids.json()
-
-        if parsed_ids:
-            return parsed_ids[0]
-
-        return None
-
     def _get_matching_data(self, data):
         return {'id': data['id']}
-
-    def update_node(self, node_id, data):
-        LOG.info('Updating the node %s with data: %s', node_id, data)
-        self._discovery_request(
-            'PUT',
-            'nodes/{0}'.format(node_id),
-            data=self._serialize_for_discovery(data))
-
-    def create_node(self, data):
-        LOG.info('Creating the node with data: %s', data)
-        self._discovery_request(
-            'POST',
-            'nodes',
-            data=self._serialize_for_discovery(data))
-
-    def _serialize_for_discovery(self, data):
-        self._extend_with_matching(data)
-        return jsonutils.dumps(data)
-
-    def _serialize_as_list_for_discovery(self, data):
-        self._extend_with_matching(data)
-        return jsonutils.dumps([data])
-
-    def _extend_with_matching(self, data):
-        data.update({'matching_data': self._get_matching_data(data)})
-
-    def _discovery_request(self, method, endpoint, *args, **kwargs):
-        if endpoint.startswith('/'):
-            endpoint = endpoint[1:]
-
-        return requests.request(
-            method,
-            'http://{ip}:{port}/{endpoint}'.format(
-                ip=self.config.discovery_host_ip,
-                port=self.config.discovery_port,
-                endpoint=endpoint),
-            *args,
-            **kwargs)

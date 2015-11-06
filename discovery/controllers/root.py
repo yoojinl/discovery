@@ -58,6 +58,21 @@ class MatchController(rest.RestController):
     @pecan.expose(template='json')
     def post(self):
         ids = []
+        # TODO more complicated algorithm is required
+        #
+        # Basically here is the basic implementation of
+        # OR condition.
+        # We should be able to also implement AND condition
+        # lets say we have two installation of Cobbler
+        # they may have intersection in ids, so we should
+        # be able to specify cobbler_id="rack1" AND id=2,
+        # or cobbler_id="rack2" AND id=2, those should be
+        # two differen nodes
+        # Another case which should be covered is list overlappings,
+        # as a user I may want to identify nodes uniqness by
+        # interfaces mac addresses, so
+        # [08:00:27:ea:2e:8d, 08:00:27:0d:fb:75] & [08:00:27:ea:2e:8d, 00:00:00:00:00:00]
+        # is the same node.
         for node in pecan.request.json:
             matching = node['matching_data']
             for node_id, data in six.iteritems(models.NODES):

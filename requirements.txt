@@ -11,3 +11,7 @@ oslo.service>=0.7.0
 six>=1.9.0
 requests>=2.5.2,!=2.8.0
 Fabric>=1.10
+oslo.serialization
+
+# File scanners specific requirements
+pyinotify

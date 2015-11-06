@@ -13,5 +13,8 @@ requests>=2.5.2,!=2.8.0
 Fabric>=1.10
 oslo.serialization
 
-# File scanners specific requirements
+# File scanner specific requirements
 pyinotify
+
+# Nailgun scanner specific requirements
+python-keystoneclient

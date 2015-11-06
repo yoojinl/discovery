@@ -15,9 +15,10 @@
 #    under the License.
 from copy import deepcopy
 
+import six
 import pecan
-from pecan import rest
 
+from pecan import rest
 from oslo_config import cfg
 
 from discovery.controllers import disks
@@ -52,9 +53,31 @@ def parse_dnsmasq_leases(conf_path):
     return result_leases
 
 
+class MatchController(rest.RestController):
+
+    @pecan.expose(template='json')
+    def post(self):
+        ids = []
+        for node in pecan.request.json:
+            matching = node['matching_data']
+            for node_id, data in six.iteritems(models.NODES):
+                for key, value in six.iteritems(matching):
+                    if data['matching_data'].get(key) == value:
+                        ids.append(node_id)
+                        break
+
+        return ids
+
+    
+class ActionsController(rest.RestController):
+
+    match = MatchController()
+
+
 class NodeController(rest.RestController):
 
     disks = disks.DiskController()
+    actions = ActionsController()
 
     @pecan.expose(template='json')
     def get_one(self, node_id):
@@ -69,7 +92,22 @@ class NodeController(rest.RestController):
         node_id = node_id.lower()
         if node_id not in models.NODES:
             pecan.abort(404, 'Node {0} do not exists'.format(node_id))
-        models.NODES[node_id]['discovery'] = pecan.request.json
+        node_data = pecan.request.json
+        models.NODES[node_id]['matching_data'] = node_data.pop('matching_data')
+        models.NODES[node_id]['discovery'] = node_data
+        models.NODES[node_id]['id'] = node_id
+
+        return models.NODES[node_id]
+
+    @pecan.expose(template='json')
+    def post(self):
+        node_id = models.get_uuid()
+        models.NODES[node_id] = {}
+        node_data = pecan.request.json
+        models.NODES[node_id]['matching_data'] = node_data.pop('matching_data')
+        models.NODES[node_id]['discovery'] = node_data
+        models.NODES[node_id]['id'] = node_id
+        
         return models.NODES[node_id]
 
 
